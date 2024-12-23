@@ -250,16 +250,16 @@ class LdmExtractor(nn.Module):
 
         self.register_hooks()
 
-        for i, step in enumerate(steps):
+        for i, step in enumerate(steps):  # BEST IS step=50 (steps=(50, ))
             self._down_features = {}
 
             t = torch.tensor([step], device=self.device).expand(batch_size)
 
             # Either we noise or we invert the latent.
-            if encode_method == "noise":
+            if encode_method == "noise":  # use NOISED LATENT (encoded before unet) as the Xt through Unet Encoder
                 noisy_latent_image = self.pipe.scheduler.add_noise(latent_image, noise, t)
 
-            elif encode_method == "inversion":
+            elif encode_method == "inversion":  # use INVERTED Xt as the Xt through Unet Encoder
                 noisy_latent_image = xts[-(i+1)] #idx + 1 as the first idx is the orig image.
 
             if self.do_classifier_free_guidance(guidance_scale):
@@ -272,4 +272,4 @@ class LdmExtractor(nn.Module):
                     self.unet(noisy_latent_image, t, encoder_hidden_states=prompt_embeds, \
                               added_cond_kwargs=added_cond_kwargs).sample
 
-        return self._down_features
+        return self._down_features  # ONLY RETURN THE LAST STEP'S _DOWN_FEATURES (BEST: THE ONLY STEP 50)
